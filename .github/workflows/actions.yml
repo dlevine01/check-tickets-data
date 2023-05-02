@@ -2,7 +2,7 @@ name: run pull-data.py
 
 on:
   schedule:
-    - cron: '0 0 * * *' # At 00:00 every day
+    - cron: '0 7 * * *' # At 03:00 AM every day
 
 jobs:
   build:
@@ -25,7 +25,7 @@ jobs:
       - name: execute py script # run pull-data.py
         env:
           SOME_SECRET: ${{ secrets.APP_TOKEN }}
-        run: python oull-data.py
+        run: python pull-data.py
 
       - name: commit files
         run: |
