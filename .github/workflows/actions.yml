@@ -24,7 +24,7 @@ jobs:
 
       - name: execute py script # run pull-data.py
         env:
-          SOME_SECRET: ${{ secrets.APP_TOKEN }}
+          APP_TOKEN: ${{ secrets.APP_TOKEN }}
         run: python pull-data.py
 
       - name: commit files
