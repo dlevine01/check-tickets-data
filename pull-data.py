@@ -8,6 +8,7 @@ import time
 from dateutil.relativedelta import relativedelta
 import urllib.parse
 import requests
+from requests import HTTPError, SSLError, MaxRetryError
 from dotenv import load_dotenv
 
 # - read in api key
@@ -137,138 +138,183 @@ def fetch_values_from_query(query):
     
     query_url = base_url + urllib.parse.quote(query)
     headers={'X-App-Token': APP_TOKEN}
-    
-    print(query_url)
+  
+    for attempt in range(3):
+        try:
+            r = requests.get(query_url, headers=headers, timeout=(4,60))
 
-    r = requests.get(query_url, headers=headers)
+            r.raise_for_status()
 
-    if r.ok:
-        return r.json()
-    
-    else:
-       print(f'error on query.\nresponse: {r.reason}\non:\n{query}\n{query_url}')
-       log.append(f'error on query.\nresponse: {r.reason}\non:\n{query}\n{query_url}')
+            return r.json()
+
+        except (HTTPError, SSLError, MaxRetryError) as e:
+
+            if attempt < 3:
+
+                time.sleep(2)
+                continue
+
+            else:
+                print(f'error on query.\nresponse: {r.reason}\nerror: {e}\non:\n{query}\n{query_url}')
+                log.append(f'error on query.\nresponse: {r.reason}\non:\n{query}\n{query_url}')
+
+                raise e
 
 #%%
 
 # ----- run queries
 
-previous_month_total = (
-    pd.DataFrame.from_records(
-        data=fetch_values_from_query(previous_month_total_query),
-        index=[today]
+
+try:
+    previous_month_total = (
+        pd.DataFrame.from_records(
+            data=fetch_values_from_query(previous_month_total_query),
+            index=[today]
+        )
+        .rename(columns={'count_distinct_summons_number':'Total'})
     )
-    .rename(columns={'count_distinct_summons_number':'Total'})
-)
 
-file_name = 'data/' + today.strftime('%m') + ' - previous month - total.csv'
+    file_name = 'data/' + today.strftime('%m') + ' - previous month - total.csv'
 
-header = not os.path.exists(file_name)
-  
-previous_month_total.to_csv(file_name, mode='a', header=header)
+    header = not os.path.exists(file_name)
+        
+    previous_month_total.to_csv(file_name, mode='a', header=header)
+
+    print('✓ previous month total')
+
+except HTTPError:
+    pass
 
 
 time.sleep(1)
 
-
-previous_month_by_type = (
-    pd.DataFrame.from_records(
-        fetch_values_from_query(previous_month_by_type_query)
+try:
+    previous_month_by_type = (
+        pd.DataFrame.from_records(
+            fetch_values_from_query(previous_month_by_type_query)
+        )
+            .set_index('violation_code')
+        .reindex([str(index) for index in range(100)])
+        .rename(columns={'count_distinct_summons_number':today})
+        .T
     )
-        .set_index('violation_code')
-    .reindex([str(index) for index in range(100)])
-    .rename(columns={'count_distinct_summons_number':today})
-    .T
-)
 
-file_name = 'data/' + today.strftime('%m') + ' - previous month - by type.csv'
+    file_name = 'data/' + today.strftime('%m') + ' - previous month - by type.csv'
 
-header = not os.path.exists(file_name)
-  
-previous_month_by_type.to_csv(file_name, mode='a', header=header)
+    header = not os.path.exists(file_name)
+    
+    previous_month_by_type.to_csv(file_name, mode='a', header=header)
+
+    print('✓ previous month by type')
+
+except HTTPError:
+    pass
+
+time.sleep(1)
+
+try:
+    previous_month_by_agency = (
+        pd.DataFrame.from_records(
+            fetch_values_from_query(previous_month_by_agency_query)
+        )
+        .assign(Agency = lambda row: row['issuing_agency'].map(AGENCY_CODES))
+        .set_index('Agency')
+        .reindex(list(AGENCY_CODES.values()))
+        .drop(columns='issuing_agency')
+        .rename(columns={'count_distinct_summons_number':today})
+        .T
+    )
+
+    file_name = 'data/' + today.strftime('%m') + ' - previous month - by agency.csv'
+
+    header = not os.path.exists(file_name)
+    
+    previous_month_by_agency.to_csv(file_name, mode='a', header=header)
+
+    print('✓ previous month by agency')
+
+except HTTPError:
+    pass
 
 
 time.sleep(1)
 
-
-previous_month_by_agency = (
-    pd.DataFrame.from_records(
-        fetch_values_from_query(previous_month_by_agency_query)
+try:
+    previous_previous_total = (
+        pd.DataFrame.from_records(
+            data=fetch_values_from_query(previous_previous_total_query),
+            index=[today]
+        )
+        .rename(columns={'count_distinct_summons_number':'Total'})
     )
-    .assign(Agency = lambda row: row['issuing_agency'].map(AGENCY_CODES))
-    .set_index('Agency')
-    .reindex(list(AGENCY_CODES.values()))
-    .drop(columns='issuing_agency')
-    .rename(columns={'count_distinct_summons_number':today})
-    .T
-)
 
-file_name = 'data/' + today.strftime('%m') + ' - previous month - by agency.csv'
+    file_name = 'data/' + today.strftime('%m') + ' - previous previous - total.csv'
 
-header = not os.path.exists(file_name)
-  
-previous_month_by_agency.to_csv(file_name, mode='a', header=header)
+    header = not os.path.exists(file_name)
+    
+    previous_previous_total.to_csv(file_name, mode='a', header=header)
+
+    print('✓ previous previous total')
+
+except HTTPError:
+    pass
 
 
 time.sleep(1)
 
+try:
 
-previous_previous_total = (
-    pd.DataFrame.from_records(
-        data=fetch_values_from_query(previous_previous_total_query),
-        index=[today]
+    previous_previous_by_type = (
+        pd.DataFrame.from_records(
+            fetch_values_from_query(previous_previous_by_type_query)
+        )
+            .set_index('violation_code')
+        .reindex([str(index) for index in range(100)])
+        .rename(columns={'count_distinct_summons_number':today})
+        .T
     )
-    .rename(columns={'count_distinct_summons_number':'Total'})
-)
 
-file_name = 'data/' + today.strftime('%m') + ' - previous previous - total.csv'
+    file_name = 'data/' + today.strftime('%m') + ' - previous previous - by type.csv'
 
-header = not os.path.exists(file_name)
-  
-previous_previous_total.to_csv(file_name, mode='a', header=header)
+    header = not os.path.exists(file_name)
+    
+    previous_previous_by_type.to_csv(file_name, mode='a', header=header)
+
+    print('✓ previous previous by type')
+
+except HTTPError:
+    pass
+
 
 
 time.sleep(1)
 
+try:
 
-previous_previous_by_type = (
-    pd.DataFrame.from_records(
-        fetch_values_from_query(previous_previous_by_type_query)
+    previous_previous_by_agency = (
+        pd.DataFrame.from_records(
+        fetch_values_from_query(previous_previous_by_agency_query)
+        )
+        .assign(Agency = lambda row: row['issuing_agency'].map(AGENCY_CODES))
+        .set_index('Agency')
+        .reindex(list(AGENCY_CODES.values()))
+        .drop(columns='issuing_agency')
+        .rename(columns={'count_distinct_summons_number':today})
+        .T
     )
-        .set_index('violation_code')
-    .reindex([str(index) for index in range(100)])
-    .rename(columns={'count_distinct_summons_number':today})
-    .T
-)
 
-file_name = 'data/' + today.strftime('%m') + ' - previous previous - by type.csv'
+    file_name = 'data/' + today.strftime('%m') + ' - previous previous - by agency.csv'
 
-header = not os.path.exists(file_name)
-  
-previous_previous_by_type.to_csv(file_name, mode='a', header=header)
+    header = not os.path.exists(file_name)
+    
+    previous_previous_by_agency.to_csv(file_name, mode='a', header=header)
 
-time.sleep(1)
+    print('✓ previous previous by agency')
 
-previous_previous_by_agency = (
-    pd.DataFrame.from_records(
-    fetch_values_from_query(previous_previous_by_agency_query)
-    )
-    .assign(Agency = lambda row: row['issuing_agency'].map(AGENCY_CODES))
-    .set_index('Agency')
-    .reindex(list(AGENCY_CODES.values()))
-    .drop(columns='issuing_agency')
-    .rename(columns={'count_distinct_summons_number':today})
-    .T
-)
-
-file_name = 'data/' + today.strftime('%m') + ' - previous previous - by agency.csv'
-
-header = not os.path.exists(file_name)
-  
-previous_previous_by_agency.to_csv(file_name, mode='a', header=header)
+except HTTPError:
+    pass
 
 
-time.sleep(1)
 
 # %%
 
