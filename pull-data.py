@@ -8,7 +8,7 @@ import time
 from dateutil.relativedelta import relativedelta
 import urllib.parse
 import requests
-from requests import HTTPError, SSLError, MaxRetryError
+from requests import HTTPError
 from dotenv import load_dotenv
 
 # - read in api key
@@ -147,7 +147,7 @@ def fetch_values_from_query(query):
 
             return r.json()
 
-        except (HTTPError, SSLError, MaxRetryError) as e:
+        except HTTPError as e:
 
             if attempt < 3:
 
