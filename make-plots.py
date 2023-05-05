@@ -24,6 +24,7 @@ previous_previous_by_agency = pd.read_csv('data/' + this_month + ' - previous pr
 
 #%%
 # reformat to tidy and concat
+# build plots
 
 # totals
 
@@ -45,12 +46,13 @@ total_plot = (
     alt.Chart(total_tidy)
     .mark_point()
     .encode(
-        x='date checked',
+        alt.X('monthdate(date checked):O').title('date checked'),
         y='rows loaded',
         color='data month'
     )
 )
 
+total_plot.save('plots/total_plot.svg')
 
 # by type
 
@@ -118,12 +120,13 @@ previous_previous_timeline = (
     )
 )
 
-timeline = (previous_month_timeline + previous_previous_timeline).interactive()
+agency_timeline = (previous_month_timeline + previous_previous_timeline).interactive()
 
+agency_timeline.save('plots/agency_timeline.svg')
 
 ## progress bars
 
-progress_bars_base = (
+progress_base = (
     alt.Chart(by_agency_tidy.dropna())
     .encode(
         alt.Y('Agency', sort=ordering),
@@ -133,7 +136,7 @@ progress_bars_base = (
 )
 
 target_point = (
-    progress_bars_base
+    progress_base
     .transform_filter(
         alt.FieldEqualPredicate(field='data month', equal='previous previous')
     )
@@ -141,7 +144,7 @@ target_point = (
 )
 
 progress_tick = (
-    progress_bars_base
+    progress_base
     .transform_filter(
         alt.FieldEqualPredicate(field='data month', equal='previous month')
 
@@ -152,8 +155,9 @@ progress_tick = (
     )
 )
 
-agency_progress_plot = (target_point + progress_tick).interactive()
+agency_progress = (target_point + progress_tick).interactive(bind_x=False)
 
+agency_progress.save('plots/agency_progress.svg')
 
-# build plots
-# save to html
+# save to svg
+
