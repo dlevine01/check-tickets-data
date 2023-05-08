@@ -10,6 +10,7 @@ import urllib.parse
 import requests
 from requests import HTTPError
 from dotenv import load_dotenv
+from collections import defaultdict
 
 # - read in api key
 
@@ -59,6 +60,110 @@ AGENCY_CODES = {
     '7':'SUNY MARITIME COLLEGE',
     '9':'NYC OFFICE OF THE SHERIFF',
 }
+
+VIOLATION_CODES = {
+    '1': 'FAILURE TO DISPLAY BUS PERMIT',
+    '2': 'NO OPERATOR NAM/ADD/PH DISPLAY',
+    '3': 'UNAUTHORIZED PASSENGER PICK-UP',
+    '4': 'BUS PARKING IN LOWER MANHATTAN',
+    '5': 'BUS LANE VIOLATION',
+    '6': 'OVERNIGHT TRACTOR TRAILER PKG',
+    '7': 'FAILURE TO STOP AT RED LIGHT',
+    '8': 'IDLING',
+    '9': 'OBSTRUCTING TRAFFIC/INTERSECT',
+    '10': 'NO STOPPING-DAY/TIME LIMITS',
+    '11': 'NO STANDING-HOTEL LOADING',
+    '12': 'MOBILE BUS LANE VIOLATION',
+    '13': 'NO STANDING-TAXI STAND',
+    '14': 'NO STANDING-DAY/TIME LIMITS',
+    '15': 'NO STANDING-OFF-STREET LOT',
+    '16': 'NO STANDING-EXC. TRUCK LOADING',
+    '17': 'NO STANDING-EXC. AUTH. VEHICLE',
+    '18': 'NO STANDING-BUS LANE',
+    '19': 'NO STANDING-BUS STOP',
+    '20': 'NO PARKING-DAY/TIME LIMITS',
+    '21': 'NO PARKING-STREET CLEANING',
+    '22': 'NO STAND TAXI/FHV RELIEF STAND',
+    '23': 'NO PARKING-TAXI STAND',
+    '24': 'NO PARKING-EXC. AUTH. VEHICLE',
+    '25': 'NO STANDING-COMMUTER VAN STOP',
+    '26': 'NO STANDING-FOR HIRE VEH STND',
+    '27': 'NO PARKING-EXC. DSBLTY PERMIT',
+    '28': 'OVERTIME STANDING DP',
+    '29': 'ALTERING INTERCITY BUS PERMIT',
+    '30': 'NO STOP/STANDNG EXCEPT PAS P/U',
+    '31': 'NO STANDING-COMM METER ZONE',
+    '32': 'OT PARKING-MISSING/BROKEN METR',
+    '33': 'MISUSE PARKING PERMIT',
+    '34': 'EXPIRED METER',
+    '35': 'SELLING/OFFERING MCHNDSE-METER',
+    '36': 'PHTO SCHOOL ZN SPEED VIOLATION',
+    '37': 'EXPIRED MUNI METER',
+    '38': 'FAIL TO DSPLY MUNI METER RECPT',
+    '39': 'OVERTIME PKG-TIME LIMIT POSTED',
+    '40': 'FIRE HYDRANT',
+    '41': 'MISCELLANEOUS',
+    '42': 'EXPIRED MUNI MTR-COMM MTR ZN',
+    '43': 'EXPIRED METER-COMM METER ZONE',
+    '44': 'PKG IN EXC. OF LIM-COMM MTR ZN',
+    '45': 'TRAFFIC LANE',
+    '46': 'DOUBLE PARKING',
+    '47': 'DOUBLE PARKING-MIDTOWN COMML',
+    '48': 'BIKE LANE',
+    '49': 'EXCAVATION-VEHICLE OBSTR TRAFF',
+    '50': 'CROSSWALK',
+    '51': 'SIDEWALK',
+    '52': 'INTERSECTION',
+    '53': 'SAFETY ZONE',
+    '54': 'PCKP DSCHRGE IN PRHBTD ZONE',
+    '55': 'ELEVATED/DIVIDED HIGHWAY/TUNNL',
+    '56': 'DIVIDED HIGHWAY',
+    '57': 'BLUE ZONE',
+    '58': 'MARGINAL STREET/WATER FRONT',
+    '59': 'ANGLE PARKING-COMM VEHICLE',
+    '60': 'ANGLE PARKING',
+    '61': 'WRONG WAY',
+    '62': 'BEYOND MARKED SPACE',
+    '63': 'NIGHTTIME STD/ PKG IN A PARK',
+    '64': 'NO STANDING EXCP D/S',
+    '65': 'OVERTIME STDG D/S',
+    '66': 'DETACHED TRAILER',
+    '67': 'PEDESTRIAN RAMP',
+    '68': 'NON-COMPLIANCE W/ POSTED SIGN',
+    '69': 'FAIL TO DISP. MUNI METER RECPT',
+    '70': 'REG. STICKER-EXPIRED/MISSING',
+    '71': 'INSP. STICKER-EXPIRED/MISSING',
+    '72': "INSP STICKER-MUTILATED/C'FEIT",
+    '73': "REG STICKER-MUTILATED/C'FEIT",
+    '74': 'FRONT OR BACK PLATE MISSING',
+    '75': 'NO MATCH-PLATE/STICKER',
+    '76': 'VIN OBSCURED',
+    '77': 'PARKED BUS-EXC. DESIG. AREA',
+    '78': 'NGHT PKG ON RESID STR-COMM VEH',
+    '79': 'UNAUTHORIZED BUS LAYOVER',
+    '80': 'MISSING EQUIPMENT',
+    '81': 'NO STANDING EXCP DP',
+    '82': 'COMML PLATES-UNALTERED VEHICLE',
+    '83': 'IMPROPER REGISTRATION',
+    '84': 'PLTFRM LFTS LWRD POS COMM VEH',
+    '85': 'STORAGE-3HR COMMERCIAL',
+    '86': 'MIDTOWN PKG OR STD-3HR LIMIT',
+    '87': 'FRAUDULENT USE PARKING PERMIT',
+    '88': 'UNALTERED COMM VEH-NME/ADDRESS',
+    '89': 'NO STD(EXC TRKS/GMTDST NO-TRK)',
+    '90': 'VEH-SALE/WSHNG/RPRNG/DRIVEWAY',
+    '91': 'VEHICLE FOR SALE(DEALERS ONLY)',
+    '92': 'WASH/REPAIR VEHCL-REPAIR ONLY',
+    '93': 'REMOVE/REPLACE FLAT TIRE',
+    '96': 'RAILROAD CROSSING',
+    '97': 'VACANT LOT',
+    '98': 'OBSTRUCTING DRIVEWAY',
+    '99': 'OTHER'
+}
+
+VIOLATION_CODES_OTHER = defaultdict(lambda: 'Other (miscoded)')
+
+VIOLATION_CODES_OTHER.update(VIOLATION_CODES)
 
 #%%
 
@@ -331,3 +436,110 @@ if log:
     with open('log.txt','a') as log_file:
         for item in log:
             log_file.write(f'{item}\n')
+
+
+# %%
+
+# reformat to json and append to json file
+
+# this_month = today.strftime('%m')
+previous_month = (today - relativedelta(months=1)).strftime(r'%B')
+previous_previous = (today - relativedelta(months=2)).strftime(r'%B')
+
+
+previous_month_total = previous_month_total.reset_index().rename(columns={'index':'date checked'})
+previous_previous_total = previous_previous_total.reset_index().rename(columns={'index':'date checked'})
+previous_month_by_type = previous_month_by_type.reset_index().rename(columns={'index':'date checked'})
+previous_previous_by_type = previous_previous_by_type.reset_index().rename(columns={'index':'date checked'})
+previous_month_by_agency = previous_month_by_agency.reset_index().rename(columns={'index':'date checked'})
+previous_previous_by_agency = previous_previous_by_agency.reset_index().rename(columns={'index':'date checked'})
+
+
+previous_month_total['data month'] = previous_month
+previous_previous_total['data month'] = previous_previous
+previous_month_by_type['data month'] = previous_month
+previous_previous_by_type['data month'] = previous_previous
+previous_month_by_agency['data month'] = previous_month
+previous_previous_by_agency['data month'] = previous_previous
+
+
+previous_month_total['look back'] = 'Previous month'
+previous_previous_total['look back'] = 'Previous previous month'
+previous_month_by_type['look back'] = 'Previous month'
+previous_previous_by_type['look back'] = 'Previous previous month'
+previous_month_by_agency['look back'] = 'Previous month'
+previous_previous_by_agency['look back'] = 'Previous previous month'
+
+
+previous_month_total['table'] = 'total'
+previous_previous_total['table'] = 'total'
+previous_month_by_type['table'] = 'by type'
+previous_previous_by_type['table'] = 'by type'
+previous_month_by_agency['table'] = 'by agency'
+previous_previous_by_agency['table'] = 'by agency'
+
+#%%
+previous_month_total['day of month checked'] = previous_month_total['date checked'].astype(str).str.slice(start=8)
+previous_previous_total['day of month checked'] = previous_previous_total['date checked'].astype(str).str.slice(start=8)
+previous_month_by_type['day of month checked'] = previous_month_by_type['date checked'].astype(str).str.slice(start=8)
+previous_previous_by_type['day of month checked'] = previous_previous_by_type['date checked'].astype(str).str.slice(start=8)
+previous_month_by_agency['day of month checked'] = previous_month_by_agency['date checked'].astype(str).str.slice(start=8)
+previous_previous_by_agency['day of month checked'] = previous_previous_by_agency['date checked'].astype(str).str.slice(start=8)
+
+
+day_data_concat = pd.concat([
+    (
+        previous_month_total
+        .rename(columns={'Total':'rows loaded'})
+    ),
+    (
+        previous_previous_total
+        .rename(columns={'Total':'rows loaded'})
+    ),
+    (
+        previous_month_by_type
+        .melt(
+            id_vars=['date checked', 'data month', 'table','look back', 'day of month checked'],
+            var_name='Violation Code',
+            value_name='rows loaded'
+        )
+        .assign(
+            violation_type = lambda row: row['Violation Code'].map(VIOLATION_CODES_OTHER)
+        )
+        .rename(columns={'violation_type':'Violation Type'})
+        .drop(columns='Violation Code')
+    ),
+    (
+        previous_previous_by_type
+        .melt(
+            id_vars=['date checked', 'data month', 'table','look back', 'day of month checked'],
+            var_name='Violation Code',
+            value_name='rows loaded'
+        )
+        .assign(
+            violation_type = lambda row: row['Violation Code'].map(VIOLATION_CODES_OTHER)
+        )
+        .rename(columns={'violation_type':'Violation Type'})
+        .drop(columns='Violation Code')
+    ),
+    (
+        previous_month_by_agency
+        .melt(
+            id_vars=['date checked', 'data month', 'table','look back', 'day of month checked'],
+            var_name='Agency',
+            value_name='rows loaded'
+        )
+    ),
+    (
+        previous_previous_by_agency
+        .melt(
+            id_vars=['date checked', 'data month', 'table','look back', 'day of month checked'],
+            var_name='Agency',
+            value_name='rows loaded'
+        )
+    ),
+])
+
+# %%
+
+day_data_concat.to_json('docs/assets/data/data.json', orient='records', mode='a')
