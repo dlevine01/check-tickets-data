@@ -1,7 +1,7 @@
 ---
 layout: default
 altair-loader:
-  vis: "/plots/combined_plots.json"
+  vis: "assets/plots/combined_plots.json"
 ---
 
 # Data loaded:
