@@ -2,4 +2,3 @@ pandas
 python-dotenv
 requests
 altair==5.0.0rc3
-vl-convert-python
