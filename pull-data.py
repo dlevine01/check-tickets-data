@@ -11,6 +11,7 @@ import requests
 from requests import HTTPError
 from dotenv import load_dotenv
 from collections import defaultdict
+import json
 
 # - read in api key
 
@@ -440,12 +441,11 @@ if log:
 
 # %%
 
-# reformat to json and append to json file
+# -------- reformat to json and append to json file
 
 # this_month = today.strftime('%m')
 previous_month = (today - relativedelta(months=1)).strftime(r'%B')
 previous_previous = (today - relativedelta(months=2)).strftime(r'%B')
-
 
 previous_month_total = previous_month_total.reset_index().rename(columns={'index':'date checked'})
 previous_previous_total = previous_previous_total.reset_index().rename(columns={'index':'date checked'})
@@ -454,14 +454,12 @@ previous_previous_by_type = previous_previous_by_type.reset_index().rename(colum
 previous_month_by_agency = previous_month_by_agency.reset_index().rename(columns={'index':'date checked'})
 previous_previous_by_agency = previous_previous_by_agency.reset_index().rename(columns={'index':'date checked'})
 
-
 previous_month_total['data month'] = previous_month
 previous_previous_total['data month'] = previous_previous
 previous_month_by_type['data month'] = previous_month
 previous_previous_by_type['data month'] = previous_previous
 previous_month_by_agency['data month'] = previous_month
 previous_previous_by_agency['data month'] = previous_previous
-
 
 previous_month_total['look back'] = 'Previous month'
 previous_previous_total['look back'] = 'Previous previous month'
@@ -470,7 +468,6 @@ previous_previous_by_type['look back'] = 'Previous previous month'
 previous_month_by_agency['look back'] = 'Previous month'
 previous_previous_by_agency['look back'] = 'Previous previous month'
 
-
 previous_month_total['table'] = 'total'
 previous_previous_total['table'] = 'total'
 previous_month_by_type['table'] = 'by type'
@@ -478,7 +475,6 @@ previous_previous_by_type['table'] = 'by type'
 previous_month_by_agency['table'] = 'by agency'
 previous_previous_by_agency['table'] = 'by agency'
 
-#%%
 previous_month_total['day of month checked'] = previous_month_total['date checked'].astype(str).str.slice(start=8)
 previous_previous_total['day of month checked'] = previous_previous_total['date checked'].astype(str).str.slice(start=8)
 previous_month_by_type['day of month checked'] = previous_month_by_type['date checked'].astype(str).str.slice(start=8)
@@ -540,6 +536,14 @@ day_data_concat = pd.concat([
     ),
 ])
 
+day_data_concat['date checked'] = day_data_concat['date checked'].astype(str)
+
 # %%
 
-day_data_concat.to_json('docs/assets/data/data.json', orient='records', mode='a')
+new_data_records = day_data_concat.to_json(orient='records')
+
+with open('docs/assets/data/data.json','r+') as data_file:
+    data = json.load(data_file)
+    data.extend(new_data_records)
+    data_file.seek(0)
+    json.dump(data, data_file)
