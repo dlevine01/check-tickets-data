@@ -540,7 +540,7 @@ day_data_concat['date checked'] = day_data_concat['date checked'].astype(str)
 
 # %%
 
-new_data_records = day_data_concat.to_json(orient='records')
+new_data_records = day_data_concat.to_dict(orient='records')
 
 with open('docs/assets/data/data.json','r+') as data_file:
     data = json.load(data_file)
