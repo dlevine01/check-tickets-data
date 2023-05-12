@@ -540,10 +540,8 @@ day_data_concat['date checked'] = day_data_concat['date checked'].astype(str)
 
 # %%
 
-new_data_records = day_data_concat.to_dict(orient='records')
+prior_data = pd.read_json('docs/assets/data/data.json', dtype='object')
 
-with open('docs/assets/data/data.json','r+') as data_file:
-    data = json.load(data_file)
-    data.extend(new_data_records)
-    data_file.seek(0)
-    json.dump(data, data_file)
+updated_data = pd.concat([prior_data,day_data_concat])
+
+updated_data.to_json('docs/assets/data/data.json', orient='records')
